@@ -154,6 +154,15 @@ button.primary {
   width: auto;
 }
 
+.row-inline {
+  display: flex;
+  gap: 8px;
+}
+
+.row-inline button {
+  width: auto;
+}
+
 .req-card {
   border: 1px dashed var(--line);
   border-radius: 10px;

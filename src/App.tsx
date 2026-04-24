@@ -58,6 +58,46 @@ function App() {
     setSelectedCampaign(config.campaigns.length);
   }
 
+  function duplicateCampaign() {
+    if (!selected) return;
+
+    setConfig((prev) => {
+      const next = structuredClone(prev);
+      const source = next.campaigns[selectedCampaign];
+      if (!source) return prev;
+
+      const clone = structuredClone(source);
+      clone.label = `${clone.label || "Untitled"} (Copy)`;
+      next.campaigns.splice(selectedCampaign + 1, 0, clone);
+      return normalizeConfig(next);
+    });
+
+    setSelectedCampaign((prev) => prev + 1);
+  }
+
+  function deleteCampaign() {
+    if (!selected) return;
+
+    const confirmed = window.confirm(
+      `Delete campaign "${selected.label || "Untitled"}"? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setConfig((prev) => {
+      const next = structuredClone(prev);
+      if (!next.campaigns[selectedCampaign]) return prev;
+
+      next.campaigns.splice(selectedCampaign, 1);
+      return normalizeConfig(next);
+    });
+
+    setSelectedCampaign((prev) => {
+      const nextLength = config.campaigns.length - 1;
+      if (nextLength <= 0) return 0;
+      return Math.min(prev, nextLength - 1);
+    });
+  }
+
   function addRequirement() {
     setConfig((prev) => {
       const next = structuredClone(prev);
@@ -142,6 +182,13 @@ function App() {
           <h2>Campaign Editor</h2>
           {selected ? (
             <>
+              <div className="row-spread">
+                <h3>Selected Campaign</h3>
+                <div className="row-inline">
+                  <button onClick={duplicateCampaign}>Duplicate Campaign</button>
+                  <button className="danger" onClick={deleteCampaign}>Delete Campaign</button>
+                </div>
+              </div>
               <label>
                 Name
                 <select
