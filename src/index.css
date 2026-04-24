@@ -172,6 +172,14 @@ button.primary {
   font-size: 12px;
 }
 
+.hint {
+  display: block;
+  margin-top: 6px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .messages ul {
   margin: 0;
   padding-left: 18px;

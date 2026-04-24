@@ -161,6 +161,20 @@ function App() {
                 <input value={selected.label} onChange={(event) => patchSelected({ label: event.target.value })} />
               </label>
               <label>
+                Campaign Allowed Codes (comma-separated)
+                <input
+                  value={(selected.allowed_codes || []).join(", ")}
+                  onChange={(event) => patchSelected({ allowed_codes: parseCodeList(event.target.value) })}
+                />
+              </label>
+              <label>
+                Campaign Disallowed Codes (comma-separated)
+                <input
+                  value={(selected.disallowed_codes || []).join(", ")}
+                  onChange={(event) => patchSelected({ disallowed_codes: parseCodeList(event.target.value) })}
+                />
+              </label>
+              <label>
                 Discount Type (dt)
                 <select value={selected.dt || "percentage"} onChange={(event) => patchSelected({ dt: event.target.value })}>
                   <option value="percentage">percentage</option>
@@ -211,6 +225,35 @@ function App() {
                           value={req.qty ?? 1}
                           onChange={(event) => patchRequirement(idx, { qty: Number(event.target.value) })}
                         />
+                      </label>
+                      <label>
+                        Req Discount Type (dt)
+                        <select
+                          value={req.dt || ""}
+                          onChange={(event) =>
+                            patchRequirement(idx, {
+                              dt: event.target.value ? (event.target.value as Requirement["dt"]) : undefined,
+                            })
+                          }
+                        >
+                          <option value="">Inherit campaign dt</option>
+                          <option value="percentage">percentage</option>
+                          <option value="fixed">fixed</option>
+                        </select>
+                      </label>
+                      <label>
+                        Req Amount (optional override)
+                        <input
+                          type="number"
+                          step="0.001"
+                          value={req.amount ?? ""}
+                          onChange={(event) =>
+                            patchRequirement(idx, {
+                              amount: event.target.value === "" ? undefined : Number(event.target.value),
+                            })
+                          }
+                        />
+                        <span className="hint">Leave blank to use campaign amount.</span>
                       </label>
                       <label>
                         Qualifiers (one per line)

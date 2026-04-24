@@ -21,12 +21,16 @@ function normalizeRequirement(req: Requirement, campaignDt?: string): Requiremen
   const normalized: Requirement = {
     ...req,
     type: req.type ?? "pid",
-    qty: req.qty ?? 1,
+    qty: Number(req.qty ?? 1),
     qualifiers: unique(req.qualifiers || []),
     dt: req.dt ?? (campaignDt as Requirement["dt"]) ?? "percentage",
   };
 
-  if (normalized.amount === undefined) {
+  if (normalized.amount !== undefined) {
+    normalized.amount = Number(normalized.amount);
+  }
+
+  if (normalized.amount === undefined || Number.isNaN(normalized.amount)) {
     delete normalized.amount;
   }
 
@@ -173,6 +177,14 @@ export function validateConfig(config: CampaignConfig): ValidationMessage[] {
 
           if (req.type && req.type !== "pid" && req.type !== "tag") {
             messages.push({ path: `${reqPath}.type`, message: "type must be 'pid' or 'tag'.", level: "error" });
+          }
+
+          if (req.dt && req.dt !== "percentage" && req.dt !== "fixed") {
+            messages.push({ path: `${reqPath}.dt`, message: "dt must be 'percentage' or 'fixed'.", level: "error" });
+          }
+
+          if (req.amount !== undefined && (typeof req.amount !== "number" || req.amount <= 0)) {
+            messages.push({ path: `${reqPath}.amount`, message: "amount must be > 0 when provided.", level: "error" });
           }
         }
       }
