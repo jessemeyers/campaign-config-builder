@@ -1,0 +1,200 @@
+:root {
+  --bg: #f4f6f8;
+  --panel: #ffffff;
+  --ink: #1f2937;
+  --ink-soft: #5b6473;
+  --line: #d8dee8;
+  --primary: #004a7a;
+  --primary-2: #0a72b1;
+  --danger: #a62f2f;
+  --warn: #a16600;
+  --ok: #1f7a3a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--ink);
+  background: radial-gradient(circle at top right, #d8ecff, transparent 30%), var(--bg);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.layout {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+}
+
+h1 {
+  font-size: 30px;
+}
+
+h2 {
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+
+h3 {
+  font-size: 16px;
+}
+
+.topbar p {
+  margin-top: 6px;
+  color: var(--ink-soft);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1.6fr 1.3fr;
+  gap: 14px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.05);
+}
+
+label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+input,
+select,
+textarea,
+button {
+  width: 100%;
+  margin-top: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+textarea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+button {
+  cursor: pointer;
+  background: #fff;
+}
+
+button:hover {
+  border-color: var(--primary-2);
+}
+
+button.primary {
+  background: linear-gradient(90deg, var(--primary), var(--primary-2));
+  color: #fff;
+  border: none;
+  width: auto;
+  padding: 10px 14px;
+}
+
+.campaign-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  max-height: 50vh;
+  overflow: auto;
+}
+
+.campaign-list li {
+  margin-bottom: 6px;
+}
+
+.campaign-list button {
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.campaign-list button.selected {
+  border-color: var(--primary-2);
+  background: #edf7ff;
+}
+
+.row-spread {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.row-spread button {
+  width: auto;
+}
+
+.req-card {
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #fcfdff;
+}
+
+.danger {
+  border-color: #e4bcbc;
+  color: var(--danger);
+}
+
+.error {
+  color: var(--danger);
+  font-size: 12px;
+}
+
+.messages ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.messages li {
+  margin-bottom: 6px;
+}
+
+.messages li.error {
+  color: var(--danger);
+}
+
+.messages li.warning {
+  color: var(--warn);
+}
+
+.ok {
+  color: var(--ok);
+}
+
+@media (max-width: 1150px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
