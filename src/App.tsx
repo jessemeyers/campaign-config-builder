@@ -15,6 +15,10 @@ function campaignSummary(config: CampaignConfig, index: number): string {
   return `${index + 1}. ${campaign.label || "Untitled"} (${campaign.name})`;
 }
 
+function formatBytes(bytes: number): string {
+  return `${bytes.toLocaleString()} bytes (${(bytes / 1024).toFixed(2)} KB)`;
+}
+
 function App() {
   const [config, setConfig] = useState<CampaignConfig>(() => normalizeConfig(starterConfig));
   const [selectedCampaign, setSelectedCampaign] = useState(0);
@@ -23,6 +27,8 @@ function App() {
 
   const messages = useMemo(() => validateConfig(config), [config]);
   const compact = useMemo(() => compactConfig(config), [config]);
+  const compactJson = useMemo(() => JSON.stringify(compact), [compact]);
+  const compactJsonBytes = useMemo(() => new TextEncoder().encode(compactJson).length, [compactJson]);
 
   const selected = config.campaigns[selectedCampaign];
 
@@ -98,6 +104,25 @@ function App() {
     });
   }
 
+  function moveCampaign(fromIndex: number, toIndex: number) {
+    if (toIndex < 0 || toIndex >= config.campaigns.length || fromIndex === toIndex) return;
+
+    setConfig((prev) => {
+      const next = structuredClone(prev);
+      const [moved] = next.campaigns.splice(fromIndex, 1);
+      if (!moved) return prev;
+      next.campaigns.splice(toIndex, 0, moved);
+      return normalizeConfig(next);
+    });
+
+    setSelectedCampaign((prev) => {
+      if (prev === fromIndex) return toIndex;
+      if (fromIndex < prev && prev <= toIndex) return prev - 1;
+      if (toIndex <= prev && prev < fromIndex) return prev + 1;
+      return prev;
+    });
+  }
+
   function addRequirement() {
     setConfig((prev) => {
       const next = structuredClone(prev);
@@ -167,12 +192,30 @@ function App() {
           <ul className="campaign-list">
             {config.campaigns.map((_, index) => (
               <li key={index}>
-                <button
-                  className={selectedCampaign === index ? "selected" : ""}
-                  onClick={() => setSelectedCampaign(index)}
-                >
-                  {campaignSummary(config, index)}
-                </button>
+                <div className="campaign-row">
+                  <button
+                    className={selectedCampaign === index ? "selected" : ""}
+                    onClick={() => setSelectedCampaign(index)}
+                  >
+                    {campaignSummary(config, index)}
+                  </button>
+                  <div className="row-inline campaign-move-actions">
+                    <button
+                      aria-label={`Move campaign ${index + 1} up`}
+                      disabled={index === 0}
+                      onClick={() => moveCampaign(index, index - 1)}
+                    >
+                      Up
+                    </button>
+                    <button
+                      aria-label={`Move campaign ${index + 1} down`}
+                      disabled={index === config.campaigns.length - 1}
+                      onClick={() => moveCampaign(index, index + 1)}
+                    >
+                      Down
+                    </button>
+                  </div>
+                </div>
               </li>
             ))}
           </ul>
@@ -342,7 +385,8 @@ function App() {
 
           <label>
             Compact JSON (copy this)
-            <textarea rows={14} readOnly value={JSON.stringify(compact)} />
+            <span className="hint">Size: {formatBytes(compactJsonBytes)}</span>
+            <textarea rows={14} readOnly value={compactJson} />
           </label>
         </section>
       </main>
