@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   compactConfig,
   normalizeConfig,
@@ -10,6 +10,8 @@ import {
 import { CONFIG_SCHEMA_VERSION } from "./lib/schema";
 import type { CampaignConfig, Requirement } from "./lib/types";
 
+const DRAFT_STORAGE_KEY = "kb-campaign-config-builder-draft-v1";
+
 function campaignSummary(config: CampaignConfig, index: number): string {
   const campaign = config.campaigns[index];
   return `${index + 1}. ${campaign.label || "Untitled"} (${campaign.name})`;
@@ -19,11 +21,48 @@ function formatBytes(bytes: number): string {
   return `${bytes.toLocaleString()} bytes (${(bytes / 1024).toFixed(2)} KB)`;
 }
 
+function isLocalStorageAvailable(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const testKey = "__kb-campaign-config-builder-test__";
+    window.localStorage.setItem(testKey, "1");
+    window.localStorage.removeItem(testKey);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function loadDraftFromStorage(): { config: CampaignConfig; selectedCampaign: number } | null {
+  if (!isLocalStorageAvailable()) return null;
+
+  try {
+    const raw = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as { config?: CampaignConfig; selectedCampaign?: number };
+    if (!parsed.config) return null;
+
+    const normalizedConfig = normalizeConfig(parsed.config);
+    const maxCampaignIndex = Math.max(0, normalizedConfig.campaigns.length - 1);
+    const selectedCampaign =
+      typeof parsed.selectedCampaign === "number"
+        ? Math.min(Math.max(parsed.selectedCampaign, 0), maxCampaignIndex)
+        : 0;
+
+    return { config: normalizedConfig, selectedCampaign };
+  } catch {
+    return null;
+  }
+}
+
 function App() {
-  const [config, setConfig] = useState<CampaignConfig>(() => normalizeConfig(starterConfig));
-  const [selectedCampaign, setSelectedCampaign] = useState(0);
+  const initialDraft = loadDraftFromStorage();
+  const [config, setConfig] = useState<CampaignConfig>(() => initialDraft?.config ?? normalizeConfig(starterConfig));
+  const [selectedCampaign, setSelectedCampaign] = useState(() => initialDraft?.selectedCampaign ?? 0);
   const [importText, setImportText] = useState("");
   const [importError, setImportError] = useState("");
+  const canPersistDraft = useMemo(() => isLocalStorageAvailable(), []);
 
   const messages = useMemo(() => validateConfig(config), [config]);
   const compact = useMemo(() => compactConfig(config), [config]);
@@ -31,6 +70,22 @@ function App() {
   const compactJsonBytes = useMemo(() => new TextEncoder().encode(compactJson).length, [compactJson]);
 
   const selected = config.campaigns[selectedCampaign];
+
+  useEffect(() => {
+    if (!canPersistDraft) return;
+
+    try {
+      window.localStorage.setItem(
+        DRAFT_STORAGE_KEY,
+        JSON.stringify({
+          config,
+          selectedCampaign,
+        })
+      );
+    } catch {
+      // Ignore persistence failures and keep the editor fully functional.
+    }
+  }, [canPersistDraft, config, selectedCampaign]);
 
   function patchSelected(patch: Record<string, unknown>) {
     setConfig((prev) => {
@@ -154,6 +209,24 @@ function App() {
     setSelectedCampaign(0);
   }
 
+  function clearConfig() {
+    const confirmed = window.confirm("Clear current config and start from the default starter config?");
+    if (!confirmed) return;
+
+    setConfig(normalizeConfig(starterConfig));
+    setSelectedCampaign(0);
+    setImportText("");
+    setImportError("");
+
+    if (!canPersistDraft) return;
+
+    try {
+      window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch {
+      // Ignore storage cleanup failures.
+    }
+  }
+
   return (
     <div className="layout">
       <header className="topbar">
@@ -161,7 +234,10 @@ function App() {
           <h1>Campaign Config Builder</h1>
           <p>Schema v{CONFIG_SCHEMA_VERSION} • Matches current Shopify Function runtime defaults.</p>
         </div>
-        <button className="primary" onClick={addCampaign}>Add Campaign</button>
+        <div className="row-inline">
+          <button className="primary" onClick={addCampaign}>Add Campaign</button>
+          <button className="danger" onClick={clearConfig}>Clear Config</button>
+        </div>
       </header>
 
       <main className="grid">
@@ -202,17 +278,19 @@ function App() {
                   <div className="row-inline campaign-move-actions">
                     <button
                       aria-label={`Move campaign ${index + 1} up`}
+                      title={`Move campaign ${index + 1} up`}
                       disabled={index === 0}
                       onClick={() => moveCampaign(index, index - 1)}
                     >
-                      Up
+                      ↑
                     </button>
                     <button
                       aria-label={`Move campaign ${index + 1} down`}
+                      title={`Move campaign ${index + 1} down`}
                       disabled={index === config.campaigns.length - 1}
                       onClick={() => moveCampaign(index, index + 1)}
                     >
-                      Down
+                      ↓
                     </button>
                   </div>
                 </div>
