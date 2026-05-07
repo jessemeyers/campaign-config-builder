@@ -13,6 +13,13 @@ export function parseCodeList(value: string): string[] {
     .filter(Boolean);
 }
 
+export function parseQualifierList(value: string): string[] {
+  return value
+    .split(/[\n,]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 function unique(values: string[]): string[] {
   return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
 }

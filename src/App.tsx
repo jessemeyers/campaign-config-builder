@@ -3,6 +3,7 @@ import {
   compactConfig,
   normalizeConfig,
   parseCodeList,
+  parseQualifierList,
   starterConfig,
   tryParseConfig,
   validateConfig,
@@ -424,13 +425,13 @@ function App() {
                         <span className="hint">Leave blank to use campaign amount.</span>
                       </label>
                       <label>
-                        Qualifiers (one per line)
+                        Qualifiers (comma-separated or one per line)
                         <textarea
                           rows={5}
                           value={(req.qualifiers || []).join("\n")}
                           onChange={(event) =>
                             patchRequirement(idx, {
-                              qualifiers: event.target.value.split("\n").map((q) => q.trim()).filter(Boolean),
+                              qualifiers: parseQualifierList(event.target.value),
                             })
                           }
                         />
