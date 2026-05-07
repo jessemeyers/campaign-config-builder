@@ -61,6 +61,7 @@ function App() {
   const initialDraft = loadDraftFromStorage();
   const [config, setConfig] = useState<CampaignConfig>(() => initialDraft?.config ?? normalizeConfig(starterConfig));
   const [selectedCampaign, setSelectedCampaign] = useState(() => initialDraft?.selectedCampaign ?? 0);
+  const [qualifierDrafts, setQualifierDrafts] = useState<Record<string, string>>({});
   const [importText, setImportText] = useState("");
   const [importError, setImportError] = useState("");
   const canPersistDraft = useMemo(() => isLocalStorageAvailable(), []);
@@ -370,6 +371,13 @@ function App() {
 
                   {selected.reqs.map((req, idx) => (
                     <div key={idx} className="req-card">
+                      {(() => {
+                        const qualifierDraftKey = `${selectedCampaign}:${idx}`;
+                        const qualifierValue =
+                          qualifierDrafts[qualifierDraftKey] ?? (req.qualifiers || []).join("\n");
+
+                        return (
+                          <>
                       <div className="row-spread">
                         <strong>Req {idx + 1}</strong>
                         <button className="danger" onClick={() => removeRequirement(idx)}>
@@ -428,14 +436,26 @@ function App() {
                         Qualifiers (comma-separated or one per line)
                         <textarea
                           rows={5}
-                          value={(req.qualifiers || []).join("\n")}
-                          onChange={(event) =>
+                          value={qualifierValue}
+                          onChange={(event) => {
+                            const raw = event.target.value;
+                            setQualifierDrafts((prev) => ({ ...prev, [qualifierDraftKey]: raw }));
                             patchRequirement(idx, {
-                              qualifiers: parseQualifierList(event.target.value),
-                            })
-                          }
+                              qualifiers: parseQualifierList(raw),
+                            });
+                          }}
+                          onBlur={() => {
+                            setQualifierDrafts((prev) => {
+                              const next = { ...prev };
+                              delete next[qualifierDraftKey];
+                              return next;
+                            });
+                          }}
                         />
                       </label>
+                          </>
+                        );
+                      })()}
                     </div>
                   ))}
                 </>
